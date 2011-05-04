@@ -53,6 +53,10 @@ sub spawn {
 
   my $hosts = delete $params{HostsFile};
 
+  my $cache = delete $params{Cache};
+  $cache = { } unless $cache;
+  $cache = undef if $cache == 0;
+
   croak(
     "$type doesn't know these parameters: ", join(', ', sort keys %params)
   ) if scalar keys %params;
@@ -66,7 +70,7 @@ sub spawn {
     0,                          # SF_HOSTS_MTIME
     0,                          # SF_HOSTS_CTIME
     0,                          # SF_HOSTS_INODE
-    { },                        # SF_HOSTS_CACHE
+    $cache,                     # SF_HOSTS_CACHE
     0,                          # SF_HOSTS_BYTES
     0,                          # SF_SHUTDOWN
   ], $type;
@@ -190,7 +194,7 @@ sub _dns_resolve {
   # more often than never checking at all.
 
   if (($type eq "A" or $type eq "AAAA") and $class eq "IN") {
-    my $address = $self->_check_hosts_file($host, $type);
+    my $address = $self->_check_hosts_file($host, $type) if defined $self->[SF_HOSTS_CACHE];
 
     if (defined $address) {
       # Pretend the request went through a name server.
@@ -659,6 +663,10 @@ On Windows systems, it may look in the following other places:
   $ENV{SystemRoot}\System32\Drivers\Etc\hosts
   $ENV{SystemRoot}\System\Drivers\Etc\hosts
   $ENV{SystemRoot}\hosts
+
+Cache (optional) holds a hashref that contains the DNS cache. If 0
+is passed instead of a hasref, queries are not cached. It defaults
+to an empty cache.
 
 =item resolve
 
