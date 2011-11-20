@@ -54,8 +54,9 @@ sub spawn {
   my $hosts = delete $params{HostsFile};
 
   my $cache = delete $params{Cache};
-  $cache = { } unless $cache;
+  $cache = { } unless defined($cache);
   $cache = undef if $cache == 0;
+  print "$cache\n";
 
   croak(
     "$type doesn't know these parameters: ", join(', ', sort keys %params)
